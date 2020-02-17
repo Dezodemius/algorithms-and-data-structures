@@ -7,15 +7,18 @@ namespace Sorts
     /// <summary>
     /// Объект для работы с пузырьковой сортировкой.
     /// </summary>
-    public static class Bubble<T>  where T : IComparable<T>
+    [SortingAlgorithm]
+    public static class Bubble
     {
         #region Методы.
         
         /// <summary>
-        /// Обыкновенная сортировка.
+        /// Обыкновенная сортировка для общих типов.
         /// </summary>
-        /// <param name="dataSet">Набор целочисленных данных.</param>
-        public static void Simple(ref List<T> dataSet)
+        /// <param name="dataSet">Набор данных обобщённого типа.</param>
+        /// <returns>Отсортированный исходный набор данных.</returns>
+        [SortingMethod]
+        public static List<T> Simple<T>(ref List<T> dataSet) where T : IComparable
         {
             for (int i = 0; i < dataSet.Count(); i++)
             {
@@ -28,13 +31,22 @@ namespace Sorts
                     dataSet[j + 1] = temp;
                 }
             }
+
+            return dataSet;
+        }
+
+        [SortingMethod]
+        public static List<int> Simple(ref List<int> dataSet)
+        {
+            return Simple<int>(ref dataSet);
         }
         
         /// <summary>
         /// Улучшенная сортировка.
         /// </summary>
         /// <param name="dataSet"></param>
-        public static void Advanced(ref List<T> dataSet)
+        [SortingMethod]
+        public static List<T> Advanced<T>(ref List<T> dataSet) where  T : IComparable
         {
             var length = dataSet.Count();
             for (int i = 1; i < length; i++)
@@ -52,15 +64,17 @@ namespace Sorts
                     sorted = false;
                 }
                 if (sorted) 
-                    return;
+                    break;
             }
+            return dataSet;
         } 
             
         /// <summary>
         /// Экспериментальная сортировка.
         /// </summary>
         /// <param name="dataSet"></param>
-        public static void Experimental(ref List<double> dataSet)
+        [SortingMethod]
+        public static List<double> Experimental(ref List<double> dataSet)
         {
             var length = dataSet.Count();
             for (int i = 1; i < length; i++)
@@ -72,6 +86,8 @@ namespace Sorts
                     dataSet[j + 1] = temp;
                 }
             }
+
+            return dataSet;
         } 
         
         #endregion

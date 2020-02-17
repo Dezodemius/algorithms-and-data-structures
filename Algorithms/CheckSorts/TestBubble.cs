@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Sorts;
 
@@ -10,17 +12,17 @@ namespace CheckSorts
     public class TestBubble
     {
         #region Поля
-        
+
         /// <summary>
         /// Размер тестируемого набора данных.
         /// </summary>
-        private const int Size = 1000;
-        
+        private const int Size = 10000;
+
         /// <summary>
         /// Количество прогонов сортировок.
         /// </summary>
-        private const int NumberOfMeasurements = 100;
-        
+        private const int NumberOfMeasurements = 10;
+
         /// <summary>
         /// Объект рандомайзера.
         /// </summary>
@@ -28,236 +30,114 @@ namespace CheckSorts
 
         #endregion
 
-        #region Тесты
-
-        #region Простой пузырёк.
-
-         [Test]
-        public void TestSimple()
+        [Test]
+        public void TestAll()
         {
+            var unsortedList = new List<int>();
+            for (var i = 0; i < Size; i++)
+                unsortedList.Add(Rand.Next());
+
+            var bubbleType = typeof(Bubble<int>);
+            var methods = bubbleType.GetMethods(BindingFlags.Public | BindingFlags.Static);
+            foreach (var method in methods)
+            {
+                if (method.GetCustomAttribute(typeof(SortingMethodAttribute)).Equals(null))
+                    continue;
+                if (method.GetParameters().Length != 1)
+                    continue;
+                
+                DoTestingMeasurements(method, unsortedList, unsortedList.OrderBy(i => i).ToList());
+            }
+        }
+
+        /// <summary>
+        /// Протестировть метод на наборе случайных данных.
+        /// </summary>
+        /// <param name="method">Метод для прогона.</param>
+        /// <param name="unsortedList">Неотсортированный список данных.</param>
+        /// <param name="sortedList">Сортированный список данных.</param>
+        private static void DoTestingMeasurements(MethodBase method, List<int> unsortedList,
+            IReadOnlyCollection<int> sortedList)
+        {
+            if (!unsortedList.Any())
+                Assert.Fail("Testing list is null.");
+
+            var workingTime = new TimeSpan();
             var stopwatch = new Stopwatch();
-            var list = new List<int>();
-            var sortingTime = new TimeSpan();
+
+            var testingResult = new TestingResult
+            {
+                Measurements = NumberOfMeasurements,
+                TestName = $"{method.DeclaringType.Name}_{method.Name}",
+                DataSetSize = Size,
+                DataSetType = sortedList.GetType().Name,
+                Beginning = DateTime.Now
+            };
 
             for (var i = 0; i < NumberOfMeasurements; i++)
             {
-                list = new List<int>();
-                for (var j = 0; j < Size; j++)
-                    list.Add(Rand.Next());
-                
                 stopwatch.Start();
-                Bubble<int>.Simple(ref list);
+                unsortedList = method.Invoke(null, new object[] {unsortedList}) as List<int>;
                 stopwatch.Stop();
-                
-                sortingTime += stopwatch.Elapsed;
+
+                workingTime += stopwatch.Elapsed;
+                if (!unsortedList.SequenceEqual(sortedList))
+                    break;
             }
-            
-            var sortedList = list.OrderBy(i => i);
-            Console.WriteLine($"Обыкновенная сортировка пузырьком: {sortingTime / NumberOfMeasurements}");
-            Assert.IsTrue(sortedList.SequenceEqual(list));
-        }
-        
-        [Test]
-        public void TestSimpleOnReverseList()
-        {
-            var stopwatch = new Stopwatch();
-            var list = new List<int>();
-            var sortingTime = new TimeSpan();
 
-            for (var i = 0; i < NumberOfMeasurements; i++)
-            {
-                list = new List<int>();
-                for (var j = 0; j < Size; j++)
-                    list.Add(Rand.Next());
-                
-                list = list.OrderByDescending(e => e).ToList();
-                
-                stopwatch.Start();
-                Bubble<int>.Simple(ref list);
-                stopwatch.Stop();
-                sortingTime += stopwatch.Elapsed;
-            }
-            
-            var sortedList = list.OrderBy(i => i);
-            Console.WriteLine($"Обыкновенная сортировка пузырьком: {sortingTime / NumberOfMeasurements}");
-            Assert.IsTrue(sortedList.SequenceEqual(list));
+            testingResult.Ending = DateTime.Now;
+            testingResult.Duration = testingResult.Ending - testingResult.Beginning;
+            testingResult.AverageTime = workingTime / NumberOfMeasurements;
+            var testingResultString = JToken.FromObject(testingResult).ToString();
+            Console.WriteLine(testingResultString);
+            Assert.Pass(testingResultString);
         }
-        
-        [Test]
-        public void TestSimpleOnSortedList()
-        {
-            var stopwatch = new Stopwatch();
-            var list = new List<int>();
-            var sortingTime = new TimeSpan();
+    }
 
-            for (var i = 0; i < NumberOfMeasurements; i++)
-            {
-                list = new List<int>();
-                for (var j = 0; j < Size; j++)
-                    list.Add(Rand.Next());
-                
-                list = list.OrderBy(e => e).ToList();
-                
-                stopwatch.Start();
-                Bubble<int>.Simple(ref list);
-                stopwatch.Stop();
-                sortingTime += stopwatch.Elapsed;
-            }
-            
-            var sortedList = list.OrderBy(i => i);
-            Console.WriteLine($"Обыкновенная сортировка пузырьком: {sortingTime / NumberOfMeasurements}");
-            Assert.IsTrue(sortedList.SequenceEqual(list));
-        }
+    /// <summary>
+    /// Структура для записи результатов тестирования.
+    /// </summary>
+    [Serializable]
+    public struct TestingResult
+    {
+        /// <summary>
+        /// Время начала тестирования.
+        /// </summary>
+        public DateTime Beginning;
 
-        #endregion
+        /// <summary>
+        /// Время окончания тестирования.
+        /// </summary>
+        public DateTime Ending;
 
-        #region Улучшенный пузырёк.
-        
-        [Test]
-        public void TestAdvanced()
-        {
-            var stopwatch = new Stopwatch();
-            var list = new List<int>();
-            
-            for (var i = 0; i < Size; i++)
-                list.Add(Rand.Next());
-            
-            stopwatch.Start();
-            var sortedList = list.OrderBy(i => i);
-            stopwatch.Stop();
-            Console.WriteLine($"Встроенная сортировка: {stopwatch.Elapsed}");
-            
-            stopwatch.Start();
-            Bubble<int>.Advanced(ref list);
-            stopwatch.Stop();
-            Console.WriteLine($"Улучшенная сортировка пузырьком: {stopwatch.Elapsed}");
-            
-            Assert.IsTrue(sortedList.SequenceEqual(list));
-        }
-        
-        [Test]
-        public void TestAdvancedOnReverseList()
-        {
-            var stopwatch = new Stopwatch();
-            var list = new List<int>();
-            
-            for (var i = 0; i < Size; i++)
-                list.Add(Rand.Next());
-            
-            list = list.OrderByDescending(a => a).ToList();
-            
-            stopwatch.Start();
-            var sortedList = list.OrderBy(i => i);
-            stopwatch.Stop();
-            Console.WriteLine($"Встроенная сортировка: {stopwatch.Elapsed}");
-            
-            stopwatch.Start();
-            Bubble<int>.Advanced(ref list);
-            stopwatch.Stop();
-            Console.WriteLine($"Улучшенная сортировка пузырьком: {stopwatch.Elapsed}");
-            
-            Assert.IsTrue(sortedList.SequenceEqual(list));
-        }
-        
-        [Test]
-        public void TestAdvancedOnSortedList()
-        {
-            var stopwatch = new Stopwatch();
-            var list = new List<int>();
-            
-            for (var i = 0; i < Size; i++)
-                list.Add(Rand.Next());
-            
-            list = list.OrderBy(i => i).ToList();
-            
-            stopwatch.Start();
-            var sortedList = list.OrderBy(i => i);
-            stopwatch.Stop();
-            Console.WriteLine($"Встроенная сортировка: {stopwatch.Elapsed}");
-            
-            stopwatch.Start();
-            Bubble<int>.Advanced(ref list);
-            stopwatch.Stop();
-            Console.WriteLine($"Улучшенная сортировка пузырьком: {stopwatch.Elapsed}");
-            
-            Assert.IsTrue(sortedList.SequenceEqual(list));
-        }
+        /// <summary>
+        /// Продолжительность выполнения теста.
+        /// </summary>
+        public TimeSpan Duration;
 
-        #endregion
+        /// <summary>
+        /// Количество проводимых измерений.
+        /// </summary>
+        public int Measurements;
 
-        #region Экспериментальный пузырёк.
+        /// <summary>
+        /// Имя теста.
+        /// </summary>
+        public string TestName;
 
-        [Test]
-        public void TestExperimental()
-        {
-            var stopwatch = new Stopwatch();
-            var list = new List<double>();
-            
-            for (var i = 0; i < Size; i++)
-                list.Add(Rand.NextDouble());
-            
-            stopwatch.Start();
-            var sortedList = list.OrderBy(i => i);
-            stopwatch.Stop();
-            Console.WriteLine($"Встроенная сортировка: {stopwatch.Elapsed}");
-            
-            stopwatch.Start();
-            Bubble<int>.Experimental(ref list);
-            stopwatch.Stop();
-            Console.WriteLine($"Эксперименталньая сортировка пузырьком: {stopwatch.Elapsed}");
-            
-            Assert.IsTrue(sortedList.SequenceEqual(list));
-        }
-        
-        [Test]
-        public void TestExperimentalOnReverseList()
-        {
-            var stopwatch = new Stopwatch();
-            var list = new List<double>();
-            
-            for (var i = 0; i < Size; i++)
-                list.Add(Rand.NextDouble());
-            
-            list = list.OrderByDescending(a => a).ToList();
-            stopwatch.Start();
-            var sortedList = list.OrderBy(i => i);
-            stopwatch.Stop();
-            Console.WriteLine($"Встроенная сортировка: {stopwatch.Elapsed}");
-            
-            stopwatch.Start();
-            Bubble<int>.Experimental(ref list);
-            stopwatch.Stop();
-            Console.WriteLine($"Эксперименталньая сортировка пузырьком: {stopwatch.Elapsed}");
-            
-            Assert.IsTrue(sortedList.SequenceEqual(list));
-        }
-        
-        [Test]
-        public void TestExperimentalOnSortedList()
-        {
-            var stopwatch = new Stopwatch();
-            var list = new List<double>();
-            
-            for (var i = 0; i < Size; i++)
-                list.Add(Rand.NextDouble());
-            
-            list = list.OrderBy(a => a).ToList();
-            
-            stopwatch.Start();
-            var sortedList = list.OrderBy(i => i);
-            stopwatch.Stop();
-            Console.WriteLine($"Встроенная сортировка: {stopwatch.Elapsed}");
-            
-            stopwatch.Start();
-            Bubble<int>.Experimental(ref list);
-            stopwatch.Stop();
-            Console.WriteLine($"Эксперименталньая сортировка пузырьком: {stopwatch.Elapsed}");
-            
-            Assert.IsTrue(sortedList.SequenceEqual(list));
-        }
-        
-        #endregion
-        
-        #endregion
+        /// <summary>
+        /// Среднее время, потраченное на прогон тестов.
+        /// </summary>
+        public TimeSpan AverageTime;
+
+        /// <summary>
+        /// Размер тестируемых данных.
+        /// </summary>
+        public int DataSetSize;
+
+        /// <summary>
+        /// Тип тестируемых данных.
+        /// </summary>
+        public string DataSetType;
     }
 }
