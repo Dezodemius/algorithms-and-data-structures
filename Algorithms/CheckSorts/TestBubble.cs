@@ -1,143 +1,259 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Sorts;
 
 namespace CheckSorts
 {
-    public class TestBubble
+  public class TestBubble
+  {
+    #region Поля
+
+    /// <summary>
+    /// Размер тестируемого набора данных.
+    /// </summary>
+    private const int Size = 10000;
+
+    /// <summary>
+    /// Количество прогонов сортировок.
+    /// </summary>
+    private const int NumberOfMeasurements = 10;
+
+    /// <summary>
+    /// Имя файла для лога.
+    /// </summary>
+    private const string LogFilename = "Bubble.Test.log";
+    
+    /// <summary>
+    /// Объект рандомайзера.
+    /// </summary>
+    private static readonly Random Rand = new Random();
+
+    /// <summary>
+    /// Стартовое сообщение при записи в лог.
+    /// </summary>
+    private const string StartMessage = "*********************";
+
+    #endregion
+
+    [Test]
+    public void TestOnRandomDataset()
     {
-        #region Поля
+      var unsorted = GetRandomizedDataSet();
+      var test = new TestingResult();
+      
+      var bubbleType = typeof(Bubble);
+      var methods = bubbleType.GetMethods(BindingFlags.Public | BindingFlags.Static);
+      foreach (var method in methods)
+      {
+        if (!method.GetCustomAttributes(typeof(SortingMethodAttribute)).Any())
+          continue;
+        if (method.GetParameters().Length != 1)
+          continue;
 
-        /// <summary>
-        /// Размер тестируемого набора данных.
-        /// </summary>
-        private const int Size = 10000;
+        test = DoTestingMeasurements(method, unsorted, unsorted.OrderBy(i => i).ToList());
+        Console.WriteLine(test.ToString());
+      }
+      
+      Assert.IsTrue(test.Success);
+    }
+    
+    [Test]
+    public void TestOnReverseDataset()
+    {
+      var unsorted = GetReversedDataSet();
+      var test1 = new TestingResult();
+      
+      var bubbleType = typeof(Bubble);
+      var methods = bubbleType.GetMethods(BindingFlags.Public | BindingFlags.Static);
+      foreach (var method in methods)
+      {
+        if (!method.GetCustomAttributes(typeof(SortingMethodAttribute)).Any())
+          continue;
+        if (method.GetParameters().Length != 1)
+          continue;
 
-        /// <summary>
-        /// Количество прогонов сортировок.
-        /// </summary>
-        private const int NumberOfMeasurements = 10;
+        test1 = DoTestingMeasurements(method, unsorted, unsorted.OrderBy(i => i).ToList());
+        Console.WriteLine(test1.ToString());
+      }
+      
+      Assert.IsTrue(test1.Success);
+    }
+    
+    [Test]
+    public void TestOnSortedDataset()
+    {
+      var unsorted = GetOrderedDataSet();
+      var test1 = new TestingResult();
+      
+      var bubbleType = typeof(Bubble);
+      var methods = bubbleType.GetMethods(BindingFlags.Public | BindingFlags.Static);
+      foreach (var method in methods)
+      {
+        if (!method.GetCustomAttributes(typeof(SortingMethodAttribute)).Any())
+          continue;
+        if (method.GetParameters().Length != 1)
+          continue;
 
-        /// <summary>
-        /// Объект рандомайзера.
-        /// </summary>
-        private static readonly Random Rand = new Random();
+        test1 = DoTestingMeasurements(method, unsorted, unsorted.OrderBy(i => i).ToList());
+        Console.WriteLine(test1.ToString());
+      }
+      
+      Assert.IsTrue(test1.Success);
+    }
+    
+    #region Вспомогательные методы
 
-        #endregion
-
-        [Test]
-        public void TestAll()
-        {
-            var unsortedList = new List<int>();
-            for (var i = 0; i < Size; i++)
-                unsortedList.Add(Rand.Next());
-
-            var bubbleType = typeof(Bubble<int>);
-            var methods = bubbleType.GetMethods(BindingFlags.Public | BindingFlags.Static);
-            foreach (var method in methods)
-            {
-                if (method.GetCustomAttribute(typeof(SortingMethodAttribute)).Equals(null))
-                    continue;
-                if (method.GetParameters().Length != 1)
-                    continue;
-                
-                DoTestingMeasurements(method, unsortedList, unsortedList.OrderBy(i => i).ToList());
-            }
-        }
-
-        /// <summary>
-        /// Протестировть метод на наборе случайных данных.
-        /// </summary>
-        /// <param name="method">Метод для прогона.</param>
-        /// <param name="unsortedList">Неотсортированный список данных.</param>
-        /// <param name="sortedList">Сортированный список данных.</param>
-        private static void DoTestingMeasurements(MethodBase method, List<int> unsortedList,
-            IReadOnlyCollection<int> sortedList)
-        {
-            if (!unsortedList.Any())
-                Assert.Fail("Testing list is null.");
-
-            var workingTime = new TimeSpan();
-            var stopwatch = new Stopwatch();
-
-            var testingResult = new TestingResult
-            {
-                Measurements = NumberOfMeasurements,
-                TestName = $"{method.DeclaringType.Name}_{method.Name}",
-                DataSetSize = Size,
-                DataSetType = sortedList.GetType().Name,
-                Beginning = DateTime.Now
-            };
-
-            for (var i = 0; i < NumberOfMeasurements; i++)
-            {
-                stopwatch.Start();
-                unsortedList = method.Invoke(null, new object[] {unsortedList}) as List<int>;
-                stopwatch.Stop();
-
-                workingTime += stopwatch.Elapsed;
-                if (!unsortedList.SequenceEqual(sortedList))
-                    break;
-            }
-
-            testingResult.Ending = DateTime.Now;
-            testingResult.Duration = testingResult.Ending - testingResult.Beginning;
-            testingResult.AverageTime = workingTime / NumberOfMeasurements;
-            var testingResultString = JToken.FromObject(testingResult).ToString();
-            Console.WriteLine(testingResultString);
-            Assert.Pass(testingResultString);
-        }
+    /// <summary>
+    /// Получить случайные данные.
+    /// </summary>
+    /// <returns>Список случайных данных.</returns>
+    private static List<double> GetRandomizedDataSet()
+    {
+      var unsorted = new List<double>();
+      for (var i = 0; i < Size; i++)
+        unsorted.Add( Rand.NextDouble());
+      return unsorted;
     }
 
     /// <summary>
-    /// Структура для записи результатов тестирования.
+    /// Протестировть метод на наборе случайных данных.
     /// </summary>
-    [Serializable]
-    public struct TestingResult
+    /// <param name="method">Метод для прогона.</param>
+    /// <param name="unsorted">Неотсортированный список данных.</param>
+    /// <param name="sortedList">Сортированный список данных.</param>
+    private static TestingResult DoTestingMeasurements(MethodBase method, List<double> unsorted, IReadOnlyCollection<double> 
+    sortedList)
     {
-        /// <summary>
-        /// Время начала тестирования.
-        /// </summary>
-        public DateTime Beginning;
+      if (!unsorted.Any() || (method == null))
+        return new TestingResult()
+        {
+          Success = false
+        };
+      
+      var workingTime = new TimeSpan();
+      var stopwatch = new Stopwatch();
 
-        /// <summary>
-        /// Время окончания тестирования.
-        /// </summary>
-        public DateTime Ending;
+      var testingResult = new TestingResult
+      {
+        Measurements = NumberOfMeasurements,
+        TestName = $"{method.DeclaringType.Name}_{method.Name}",
+        DataSetSize = Size,
+        Beginning = DateTime.Now
+      };
 
-        /// <summary>
-        /// Продолжительность выполнения теста.
-        /// </summary>
-        public TimeSpan Duration;
+      var needCheck = true;
+      int i = 0;
 
-        /// <summary>
-        /// Количество проводимых измерений.
-        /// </summary>
-        public int Measurements;
+      while (i++ < NumberOfMeasurements)
+      {
+        var tempUnsorted = unsorted;
+        stopwatch.Start();
+        method.Invoke(null, new object[] { tempUnsorted });
+        stopwatch.Stop();
+        workingTime += stopwatch.Elapsed;
 
-        /// <summary>
-        /// Имя теста.
-        /// </summary>
-        public string TestName;
+        if (!needCheck) 
+          continue;
+        
+        if (!tempUnsorted.SequenceEqual(sortedList))
+        {
+          testingResult.Success = false;
+          break;
+        }
 
-        /// <summary>
-        /// Среднее время, потраченное на прогон тестов.
-        /// </summary>
-        public TimeSpan AverageTime;
+        testingResult.Success = true;
+        needCheck = false;
+      } 
+      
+      testingResult.Ending = DateTime.Now;
+      testingResult.Duration = testingResult.Ending - testingResult.Beginning;
+      testingResult.AverageTime = workingTime / NumberOfMeasurements;
 
-        /// <summary>
-        /// Размер тестируемых данных.
-        /// </summary>
-        public int DataSetSize;
-
-        /// <summary>
-        /// Тип тестируемых данных.
-        /// </summary>
-        public string DataSetType;
+      using var writer = new StreamWriter(LogFilename, true);
+      writer.WriteLine(StartMessage);
+      writer.WriteLine(testingResult.ToString());
+      
+      return testingResult;
     }
+    
+    /// <summary>
+    /// Получить набор данных, отсортированных по убыванию.
+    /// </summary>
+    /// <returns>Обратный список данных.</returns>
+    private static List<double> GetReversedDataSet()
+    {
+      return GetRandomizedDataSet().OrderByDescending(d => d ).ToList();
+    }
+    
+    /// <summary>
+    /// Получить набор данных, отсортированных по возрастанию.
+    /// </summary>
+    /// <returns>Отсортированный список данных.</returns>
+    private static List<double> GetOrderedDataSet()
+    {
+      return GetRandomizedDataSet().OrderBy(d => d ).ToList();
+    }
+    
+    #endregion
+  }
+
+  /// <summary>
+  /// Структура для записи результатов тестирования.
+  /// </summary>
+  [Serializable]
+  public struct TestingResult
+  {
+    /// <summary>
+    /// Время начала тестирования.
+    /// </summary>
+    public DateTime Beginning;
+
+    /// <summary>
+    /// Время окончания тестирования.
+    /// </summary>
+    public DateTime Ending;
+
+    /// <summary>
+    /// Продолжительность выполнения теста.
+    /// </summary>
+    public TimeSpan Duration;
+
+    /// <summary>
+    /// Количество проводимых измерений.
+    /// </summary>
+    public int Measurements;
+
+    /// <summary>
+    /// Имя теста.
+    /// </summary>
+    public string TestName;
+
+    /// <summary>
+    /// Среднее время, потраченное на прогон тестов.
+    /// </summary>
+    public TimeSpan AverageTime;
+
+    /// <summary>
+    /// Размер тестируемых данных.
+    /// </summary>
+    public int DataSetSize;
+
+    /// <summary>
+    /// Успешность выполнения.
+    /// </summary>
+    public bool Success;
+
+    public override string ToString()
+    {
+      return JToken.FromObject(this).ToString(Formatting.Indented);
+    }
+  }
 }

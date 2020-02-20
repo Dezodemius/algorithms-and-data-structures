@@ -16,37 +16,31 @@ namespace Sorts
         /// Обыкновенная сортировка для общих типов.
         /// </summary>
         /// <param name="dataSet">Набор данных обобщённого типа.</param>
-        /// <returns>Отсортированный исходный набор данных.</returns>
+        /// <list type="T">Тип данных, из которых состоит коллекция.</list>
         [SortingMethod]
-        public static List<T> Simple<T>(ref List<T> dataSet) where T : IComparable
+        public static void Simple(ref List<double> dataSet)
         {
             for (int i = 0; i < dataSet.Count(); i++)
             {
                 for (int j = 0; j < dataSet.Count() - 1; j++)
                 {
-                    if (dataSet[j].CompareTo(dataSet[j + 1]) <= 0) continue;
+                    if (dataSet[j].CompareTo(dataSet[j + 1]) <= 0) 
+                        continue;
                     
                     var temp = dataSet[j];
                     dataSet[j] = dataSet[j + 1];
                     dataSet[j + 1] = temp;
                 }
             }
-
-            return dataSet;
-        }
-
-        [SortingMethod]
-        public static List<int> Simple(ref List<int> dataSet)
-        {
-            return Simple<int>(ref dataSet);
         }
         
         /// <summary>
         /// Улучшенная сортировка.
         /// </summary>
         /// <param name="dataSet"></param>
+        /// <list type="T">Тип данных, из которых состоит коллекция.</list>
         [SortingMethod]
-        public static List<T> Advanced<T>(ref List<T> dataSet) where  T : IComparable
+        public static void Advanced(ref List<double> dataSet)
         {
             var length = dataSet.Count();
             for (int i = 1; i < length; i++)
@@ -66,15 +60,16 @@ namespace Sorts
                 if (sorted) 
                     break;
             }
-            return dataSet;
         } 
             
         /// <summary>
         /// Экспериментальная сортировка.
         /// </summary>
         /// <param name="dataSet"></param>
-        [SortingMethod]
-        public static List<double> Experimental(ref List<double> dataSet)
+        /// <remarks>Данный метод не работает для вещественных чисел. Нужно либо
+        /// учитывать точность, с которой нужно выполнять вычисления, либо вообще его не применять.</remarks>
+        //[SortingMethod]
+        public static void Experimental(ref List<double> dataSet)
         {
             var length = dataSet.Count();
             for (int i = 1; i < length; i++)
@@ -86,8 +81,6 @@ namespace Sorts
                     dataSet[j + 1] = temp;
                 }
             }
-
-            return dataSet;
         } 
         
         #endregion
