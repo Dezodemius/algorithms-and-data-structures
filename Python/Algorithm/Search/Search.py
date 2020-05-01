@@ -1,6 +1,3 @@
-from Sort.benchmarks import stopwatch, stopwatch_recursion
-
-
 def binary(a, key) -> int:
     """Binary search.
 

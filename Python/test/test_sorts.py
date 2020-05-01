@@ -1,6 +1,7 @@
-from Sort import sorts
 from Algorithm.Search import Search
+from Sort import sorts
 import random
+import pytest
 
 
 from Sort.benchmarks import stopwatch_recursion
