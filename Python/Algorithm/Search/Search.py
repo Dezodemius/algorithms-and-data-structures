@@ -37,16 +37,18 @@ def binary_recursion(a, key, left, right) -> int:
         :param right - Right bound.
         :return Position of key.
     """
-    if left < right:
-        mid = (left + right) // 2
-        if a[mid] == key:
-            return mid
-        elif a[mid] < key:
-            return binary_recursion(a, key, mid + 1, right)
+    if right <= left:
+        if key > a[left]:
+            return left + 1
         else:
-            return binary_recursion(a, key, left, mid - 1)
-    else:
-        return -1
+            return left
+
+    mid = (left + right) // 2
+    if key == a[mid]:
+        return mid + 1
+    if key > a[mid]:
+        return binary_recursion(a, key, mid + 1, right)
+    return binary_recursion(a, key, left, mid - 1)
 
 
 def exponential(a, key) -> int:
@@ -60,7 +62,7 @@ def exponential(a, key) -> int:
         return 0
     n = len(a)
     i = 1
-    while i < n and a[i] <= key:
+    while i < n and a[i] < key:
         i *= 2
-    return binary_recursion(a, key, i // 2, min(i, n))
+    return binary_recursion(a, key, i // 2, min(i + 1, n))
 
