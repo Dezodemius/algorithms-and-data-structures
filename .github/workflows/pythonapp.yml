@@ -29,4 +29,4 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest -v -s --tb=short Python/test/test_sorts.py
+        pytest
