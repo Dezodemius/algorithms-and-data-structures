@@ -21,16 +21,22 @@ def is_sorted(a, in_reverse=False) -> bool:
     return True
 
 
-def sort_checker(func, n):
+def sort_checker(func, n, *args):
     """Checks sorts on generated array.
 
         :param func: Action.
         :param n: Number of elements.
+        :param args: Other arguments.
     """
+    in_reverse = False
     a = tools.generate_array(n)
     decorated_func = benchmarks.stopwatch_recursion(func)
-    decorated_func(a)
-    return is_sorted(a)
+    if len(args) > 0:
+        in_reverse = args[0]
+        decorated_func(a, in_reverse)
+    else:
+        decorated_func(a)
+    return is_sorted(a, in_reverse)
 
 
 def test_bubble_sort():
@@ -43,8 +49,13 @@ def test_insertion_sort():
     assert sort_checker(sorts.insertion, n) is True
 
 
+def test_insertion_sort_reversed():
+    n = 10
+    assert sort_checker(sorts.insertion, n, True) is True
+
+
 def test_binary_insertion_sort():
-    n = 1000
+    n = 10
     assert sort_checker(sorts.binary_insertion, n) is True
 
 

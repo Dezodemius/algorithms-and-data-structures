@@ -33,10 +33,17 @@ def insertion(a, in_reverse=False):
         :param a: Input array.
         :param in_reverse: In reverse flag.
     """
+    n = len(a)
     if in_reverse:
-        return "Not supported now."
+        for i in range(n - 2, -1, -1):
+            j = n - 1
+            while j > i and a[i] >= a[j]:
+                j -= 1
+            while j > i:
+                a[i], a[j] = a[j], a[i]
+                j -= 1
     else:
-        for i in range(len(a)):
+        for i in range(1, n):
             j = 0
             while j < i and a[i] >= a[j]:
                 j += 1
@@ -45,41 +52,37 @@ def insertion(a, in_reverse=False):
                 j += 1
 
 
-def binary_insertion(a, in_reverse=False):
+def binary_insertion(a):
     """Insertion sort.
 
         :param a: Input array.
-        :param in_reverse: In reverse flag.
     """
-    if in_reverse:
-        return "Not supported now."
-    else:
-        n = len(a)
-        for i in range(1, n):
-            key = a[i]
-            key_position = Search.binary_recursion(a, key, 0, i) + 1
-            for k in range(i, key_position, -1):
-                a[k] = a[k - 1]
-            a[key_position] = key
+    n = len(a)
+    for i in range(1, n):
+        key = a[i]
+        key_position = Search.binary_recursion(a, key, 0, i) + 1
+        for k in range(i, key_position, -1):
+            a[k] = a[k - 1]
+        a[key_position] = key
 
 
-def shell(a):
+def shell(a, in_reverse=False):
     """Shell's sort.
 
         :param a: Input array.
     """
     n = len(a)
-    gap = n // 2
+    step = n // 2
 
-    while gap > 0:
-        for i in range(gap, n):
+    while step > 0:
+        for i in range(step, n):
             tmp = a[i]
             j = i
-            while j >= gap and a[j - gap] > tmp:
-                a[j] = a[j - gap]
-                j -= gap
+            while j >= step and a[j - step] > tmp:
+                a[j] = a[j - step]
+                j -= step
             a[j] = tmp
-        gap //= 2
+        step //= 2
 
 
 if __name__ == "__main__":
