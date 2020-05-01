@@ -46,3 +46,8 @@ def test_insertion_sort():
 def test_binary_insertion_sort():
     n = 1000
     assert sort_checker(sorts.binary_insertion, n) is True
+
+
+def test_shell_sort():
+    n = 1000
+    assert sort_checker(sorts.shell, n) is True

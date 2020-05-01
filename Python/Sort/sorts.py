@@ -63,5 +63,24 @@ def binary_insertion(a, in_reverse=False):
             a[key_position] = key
 
 
+def shell(a):
+    """Shell's sort.
+
+        :param a: Input array.
+    """
+    n = len(a)
+    gap = n // 2
+
+    while gap > 0:
+        for i in range(gap, n):
+            tmp = a[i]
+            j = i
+            while j >= gap and a[j - gap] > tmp:
+                a[j] = a[j - gap]
+                j -= gap
+            a[j] = tmp
+        gap //= 2
+
+
 if __name__ == "__main__":
     print("Not for execution.")
