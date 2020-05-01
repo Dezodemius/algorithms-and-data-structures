@@ -15,6 +15,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pipenv
+        pipenv install --dev
     - name: Test with pytest
       run: |
-        pytest -v -s --tb=short test_sorts.py
+        pip3 install pytest
+        pytest -v -s --tb=short Python/test/test_sorts.py
