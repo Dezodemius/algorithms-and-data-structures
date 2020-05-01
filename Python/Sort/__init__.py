@@ -1,2 +1,2 @@
-__all__ = ['sorts', 'benchmarks']
+__all__ = ['sorts']
 

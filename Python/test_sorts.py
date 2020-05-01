@@ -1,22 +1,5 @@
-from Algorithm.Search import Search
 from Sort import sorts
-import random
-import pytest
-
-
-from Sort.benchmarks import stopwatch_recursion
-
-
-def generate_array(n):
-    """ Генератор случайного массива.
-
-        :param n: Array size.
-        :return Generated array.
-    """
-    array = []
-    for i in range(n):
-        array.append(random.randint(-n, n))
-    return array
+from utils import tools, benchmarks
 
 
 def is_sorted(a, in_reverse=False) -> bool:
@@ -44,30 +27,10 @@ def sort_checker(func, n):
         :param func: Action.
         :param n: Number of elements.
     """
-    a = generate_array(n)
-    decorated_func = stopwatch_recursion(func)
+    a = tools.generate_array(n)
+    decorated_func = benchmarks.stopwatch_recursion(func)
     decorated_func(a)
     return is_sorted(a)
-
-
-def search_checker(func, n, *args):
-    """Checks searches on generated array.
-
-        :param func: Action.
-        :param n: Number of elements.
-        :param args: Arguments.
-    """
-    a = sorted(generate_array(n))
-    key = random.choice(a)
-
-    decorated_func = stopwatch_recursion(func)
-
-    if len(args) != 0:
-        founded_position = decorated_func(a, key, *args)
-    else:
-        founded_position = decorated_func(a, key)
-
-    return key == a[founded_position]
 
 
 def test_bubble_sort():
@@ -83,19 +46,3 @@ def test_insertion_sort():
 def test_binary_insertion_sort():
     n = 1000
     assert sort_checker(sorts.binary_insertion, n) is True
-
-
-def test_binary_search():
-    n = 1000
-    assert search_checker(Search.binary, n) is True, "he"
-
-
-def test_binary_recursion_search():
-    n = 1000
-    assert search_checker(Search.binary_recursion, n, 0, n) is True
-
-
-def test_exponential_search():
-    n = 1000
-    assert search_checker(Search.exponential, n) is True
-
