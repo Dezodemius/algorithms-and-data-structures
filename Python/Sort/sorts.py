@@ -56,27 +56,14 @@ def binary_insertion(a, in_reverse=False):
         return "Not supported now."
     else:
         n = len(a)
-        for i in range(n):
-            left = 0
-            mid = n // 2
-            right = i + 1
-
+        for i in range(1, n, 1):
+            j = i - 1
             key = a[i]
-
-            while a[mid] != key and left <= right and:
-                if key > a[mid]:
-                    left = mid + 1
-                else:
-                    right = mid - 1
-                mid = (left + right) // 2
-
-            if left > right:
-                return -1
-            else:
-                return mid
-            while j < i:
-                a[i], a[j] = a[j], a[i]
-                j += 1
+            loc = Search.binary_recursion(a, key, 0, j)
+            while j >= loc:
+                a[j + 1] = a[j]
+                j -= 1
+            a[j + 1] = key
 
 
 if __name__ == "__main__":
