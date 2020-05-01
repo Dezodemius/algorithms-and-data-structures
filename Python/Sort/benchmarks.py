@@ -14,7 +14,23 @@ def stopwatch(function):
         res = function(*args, **kwargs)
         print("-->Finished '{0}' in {1:.8f} secs".format(function.__name__, datetime.now().timestamp() - start.timestamp()))
         return res
+    wrapper_stopwatch._original = function
+    return wrapper_stopwatch
 
+
+def stopwatch_recursion(function):
+    @functools.wraps(function)
+    def wrapper_stopwatch(*args, **kwargs):
+        @functools.wraps(function)
+        def wrapper_under_recursion(*args, **kwargs):
+            return function(*args, **kwargs)
+
+        start = datetime.now()
+        res = wrapper_under_recursion(*args, **kwargs)
+        print("-->Finished '{0}' in {1:.8f} secs".format(function.__name__,
+                                                         datetime.now().timestamp() - start.timestamp()))
+        return res
+    wrapper_stopwatch._original = function
     return wrapper_stopwatch
 
 

@@ -1,4 +1,4 @@
-from Sort.benchmarks import stopwatch
+from Sort.benchmarks import stopwatch, stopwatch_recursion
 
 
 def binary(a, key) -> int:
@@ -31,32 +31,32 @@ def binary(a, key) -> int:
 def binary_recursion(a, key, left, right) -> int:
     """Binary search with recursion.
 
-        :param a - Input array.
-        :param key - Required element.
-        :param left - Left bound.
-        :param right - Right bound.
-        :return Position of key.
+        :param a: Input array.
+        :param key: Required element.
+        :param left: Left bound.
+        :param right: Right bound.
+        :return: Position of key.
     """
-    if right <= left:
-        if key > a[left]:
-            return left + 1
+    if right - left <= 1:
+        if key < a[left]:
+            return left - 1
         else:
             return left
-
     mid = (left + right) // 2
-    if key == a[mid]:
-        return mid + 1
-    if key > a[mid]:
-        return binary_recursion(a, key, mid + 1, right)
-    return binary_recursion(a, key, left, mid - 1)
+    if a[mid] < key:
+        return binary_recursion(a, key, mid, right)
+    elif a[mid] > key:
+        return binary_recursion(a, key, left, mid)
+    else:
+        return mid
 
 
 def exponential(a, key) -> int:
     """Exponential search
 
-        :param a - Input array.
-        :param key - Required element.
-        :return Position of key.
+        :param a: Input array.
+        :param key: Required element.
+        :return: Position of key.
     """
     if a[0] == key:
         return 0

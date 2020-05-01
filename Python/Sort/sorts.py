@@ -1,4 +1,3 @@
-from Sort.benchmarks import stopwatch
 from Algorithm.Search import Search
 
 
@@ -56,14 +55,12 @@ def binary_insertion(a, in_reverse=False):
         return "Not supported now."
     else:
         n = len(a)
-        for i in range(1, n, 1):
-            j = i - 1
+        for i in range(1, n):
             key = a[i]
-            loc = Search.binary_recursion(a, key, 0, j)
-            while j >= loc:
-                a[j + 1] = a[j]
-                j -= 1
-            a[j + 1] = key
+            key_position = Search.binary_recursion(a, key, 0, i) + 1
+            for k in range(i, key_position, -1):
+                a[k] = a[k - 1]
+            a[key_position] = key
 
 
 if __name__ == "__main__":

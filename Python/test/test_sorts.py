@@ -1,7 +1,9 @@
-from datetime import datetime
 from Sort import sorts
 from Algorithm.Search import Search
 import random
+
+
+from Sort.benchmarks import stopwatch_recursion
 
 
 def generate_array(n):
@@ -42,12 +44,9 @@ def sort_checker(func, n):
         :param n: Number of elements.
     """
     a = generate_array(n)
-    start = datetime.now().timestamp()
-    func(a)
-    finish = datetime.now().timestamp()
-
-    print("-->Finished '{0}' in {1:.8f} secs".format(func.__name__, finish - start))
-    print(f"{func.__name__}: {is_sorted(a)}")
+    decorated_func = stopwatch_recursion(func)
+    decorated_func(a)
+    return is_sorted(a)
 
 
 def search_checker(func, n, *args):
@@ -59,33 +58,43 @@ def search_checker(func, n, *args):
     """
     a = sorted(generate_array(n))
     key = random.choice(a)
+
+    decorated_func = stopwatch_recursion(func)
+
     if len(args) != 0:
-        start = datetime.now().timestamp()
-        position = func(a, key, *args)
-        finish = datetime.now().timestamp()
+        founded_position = decorated_func(a, key, *args)
     else:
-        start = datetime.now().timestamp()
-        position = func(a, key)
-        finish = datetime.now().timestamp()
+        founded_position = decorated_func(a, key)
 
-    print("-->Finished '{0}' in {1:.8f} secs".format(func.__name__, finish - start))
-    if position is not None:
-        print(f"{func.__name__}: {a[position] == key}")
-    else:
-        print("Not found")
+    return key == a[founded_position]
 
 
-def main():
-    """ The entry point."""
-    n = 10
-
-    search_checker(Search.binary, n)
-    search_checker(Search.binary_recursion, n, 0, n)
-    search_checker(Search.exponential, n)
-
-    sort_checker(sorts.bubble, n)
-    sort_checker(sorts.insertion, n)
-    sort_checker(sorts.binary_insertion, n)
+def test_bubble_sort():
+    n = 1000
+    assert sort_checker(sorts.bubble, n) is True
 
 
-main()
+def test_insertion_sort():
+    n = 1000
+    assert sort_checker(sorts.insertion, n) is True
+
+
+def test_binary_insertion_sort():
+    n = 1000
+    assert sort_checker(sorts.binary_insertion, n) is True
+
+
+def test_binary_search():
+    n = 1000
+    assert search_checker(Search.binary, n) is True, "he"
+
+
+def test_binary_recursion_search():
+    n = 1000
+    assert search_checker(Search.binary_recursion, n, 0, n) is True
+
+
+def test_exponential_search():
+    n = 1000
+    assert search_checker(Search.exponential, n) is True
+
