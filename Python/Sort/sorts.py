@@ -66,7 +66,7 @@ def binary_insertion(a):
         a[key_position] = key
 
 
-def shell(a, in_reverse=False):
+def shell(a):
     """Shell's sort.
 
         :param a: Input array.
@@ -83,6 +83,21 @@ def shell(a, in_reverse=False):
                 j -= step
             a[j] = tmp
         step //= 2
+
+
+def selection(a):
+    """Selection sort.
+
+        :param a: Input array.
+    """
+    n = len(a)
+    for i in range(n):
+        min_index, min_value = i, a[i]
+        for j in range(i + 1, n):
+            if a[j] < min_value:
+                min_index = j
+                min_value = a[j]
+        a[i], a[min_index] = min_value, a[i]
 
 
 if __name__ == "__main__":
