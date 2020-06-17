@@ -33,10 +33,13 @@ def sort_checker(func, n, *args):
     decorated_func = benchmarks.stopwatch_recursion(func)
     if len(args) > 0:
         in_reverse = args[0]
-        decorated_func(a, in_reverse)
+        result = decorated_func(a, in_reverse)
     else:
-        decorated_func(a)
-    return is_sorted(a, in_reverse)
+        result = decorated_func(a)
+
+    if result is None:
+        return is_sorted(a, in_reverse)
+    return is_sorted(result, in_reverse)
 
 
 def test_bubble_sort():
@@ -50,12 +53,12 @@ def test_insertion_sort():
 
 
 def test_insertion_sort_reversed():
-    n = 10
+    n = 1000
     assert sort_checker(sorts.insertion, n, True) is True
 
 
 def test_binary_insertion_sort():
-    n = 10
+    n = 1000
     assert sort_checker(sorts.binary_insertion, n) is True
 
 
@@ -67,3 +70,8 @@ def test_shell_sort():
 def test_selection_sort():
     n = 1000
     assert sort_checker(sorts.selection, n) is True
+
+
+def test_quick_sort():
+    n = 1000
+    assert sort_checker(sorts.quick, n) is True

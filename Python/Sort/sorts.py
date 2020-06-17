@@ -1,4 +1,5 @@
 from Algorithm.Search import Search
+import random
 
 
 def bubble(a, in_reverse=False):
@@ -98,6 +99,19 @@ def selection(a):
                 min_index = j
                 min_value = a[j]
         a[i], a[min_index] = min_value, a[i]
+
+
+def quick(a):
+    """Quick sort.
+
+        :param a: Input array.
+    """
+    if len(a) <= 1:
+        return a
+    else:
+        q = random.choice(a)
+
+    return quick([n for n in a if n < q]) + [q] * a.count(q) + quick([n for n in a if n > q])
 
 
 if __name__ == "__main__":
