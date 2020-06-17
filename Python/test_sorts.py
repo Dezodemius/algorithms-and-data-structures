@@ -73,5 +73,10 @@ def test_selection_sort():
 
 
 def test_quick_sort():
-    n = 1000
+    n = 100000
     assert sort_checker(sorts.quick, n) is True
+
+
+def test_heap_sort():
+    n = 100000
+    assert sort_checker(sorts.heap, n) is True

@@ -29,7 +29,7 @@ def bubble(a, in_reverse=False):
 
 
 def insertion(a, in_reverse=False):
-    """Insertion sort.
+    """ Insertion sort.
 
         :param a: Input array.
         :param in_reverse: In reverse flag.
@@ -54,7 +54,7 @@ def insertion(a, in_reverse=False):
 
 
 def binary_insertion(a):
-    """Insertion sort.
+    """ Insertion sort.
 
         :param a: Input array.
     """
@@ -68,7 +68,7 @@ def binary_insertion(a):
 
 
 def shell(a):
-    """Shell's sort.
+    """ Shell's sort.
 
         :param a: Input array.
     """
@@ -87,7 +87,7 @@ def shell(a):
 
 
 def selection(a):
-    """Selection sort.
+    """ Selection sort.
 
         :param a: Input array.
     """
@@ -102,16 +102,51 @@ def selection(a):
 
 
 def quick(a):
-    """Quick sort.
+    """ Quick sort.
 
         :param a: Input array.
     """
     if len(a) <= 1:
         return a
-    else:
-        q = random.choice(a)
+    mid = a[len(a) // 2]
 
-    return quick([n for n in a if n < q]) + [q] * a.count(q) + quick([n for n in a if n > q])
+    return quick([n for n in a if n < mid]) + [mid] * a.count(mid) + quick([n for n in a if n > mid])
+
+
+def heap(a):
+    """ Heap sort.
+
+        :param a: Input array.
+    """
+    def heapify(array, heap_size, current_index):
+        """ Heapify array.
+
+        :param array: Input array.
+        :param heap_size: Size of heap.
+        :param current_index: Root index.
+        """
+        root = current_index
+        left_child = 2 * current_index + 1
+        right_child = 2 * current_index + 2
+
+        if left_child < heap_size and array[current_index] < array[left_child]:
+            root = left_child
+
+        if right_child < heap_size and array[root] < array[right_child]:
+            root = right_child
+        if root != current_index:
+            array[current_index], array[root] = array[root], array[current_index]
+
+            heapify(array, heap_size, root)
+
+    n = len(a)
+
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(a, n, i)
+
+    for i in range(n - 1, 0, -1):
+        a[i], a[0] = a[0], a[i]
+        heapify(a, i, 0)
 
 
 if __name__ == "__main__":
